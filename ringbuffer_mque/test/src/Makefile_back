@@ -1,0 +1,4 @@
+## Compiler to use (modify this for cross compile).
+my-test: test.c
+	$(CC) -c test.c
+	$(CC) -o my-test test.o
