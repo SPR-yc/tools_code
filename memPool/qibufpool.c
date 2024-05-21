@@ -50,9 +50,21 @@ static pool_info_st *findGoalPool(QI_VOID *pool)
     return pool_cur;
 }
 
-QI_S32 QIMemPoolInit(QI_VOID *pool, QI_U32 poolSize, QI_U32 blkSize)
+QI_S32 QIMemPoolInit(QI_VOID **pool, QI_U32 poolSize, QI_U32 blkSize)
 {
     QI_S32 ret = -1;
+    if(pool == NULL || poolSize == 0 || blkSize == 0)
+    {
+        printf("%s: para invaild!\n", __FUNCTION__);
+        return -1;
+    }
+
+    *pool = (QI_VOID *)malloc(poolSize);
+    if(*pool == NULL)
+    {
+        printf("pool malloc failed!\n");
+        return -1;
+    }
 
     //申请内存池信息结构体 并初始化
     pool_info_st *tmp_pool_ptr = NULL;
@@ -60,10 +72,10 @@ QI_S32 QIMemPoolInit(QI_VOID *pool, QI_U32 poolSize, QI_U32 blkSize)
     if(tmp_pool_ptr == NULL)
     {
         printf("%s  line:%d  malloc failed!\n", __FUNCTION__, __LINE__);
-        return -1;
+        goto err1;
     }
     memset(tmp_pool_ptr, 0, sizeof(pool_info_st));
-    tmp_pool_ptr->pool = pool;
+    tmp_pool_ptr->pool = *pool;
     tmp_pool_ptr->poolSize = poolSize;
     tmp_pool_ptr->blkSize = blkSize;
     tmp_pool_ptr->blkNum = poolSize / blkSize;
@@ -79,7 +91,7 @@ QI_S32 QIMemPoolInit(QI_VOID *pool, QI_U32 poolSize, QI_U32 blkSize)
     }
 
     int i = 0;
-    QI_VOID *tmp_ptr = pool;
+    QI_VOID *tmp_ptr = *pool;
     for(i = 0; i < tmp_pool_ptr->blkNum; i++) //循环初始化本内存池各blk信息
     {
         tmp_ptr += i * blkSize;
@@ -108,7 +120,8 @@ QI_S32 QIMemPoolInit(QI_VOID *pool, QI_U32 poolSize, QI_U32 blkSize)
 err:
     pthread_mutex_destroy(&tmp_pool_ptr->pool_mutex);
     free(tmp_pool_ptr);
-
+err1:
+    free(*pool);
     return -1;
 }
 
@@ -149,6 +162,8 @@ QI_S32 QIMemPoolDeInit(QI_VOID *pool)
     pool_pre->next = pool_cur->next; //将本内存池从链表删除
     free(pool_cur);  //释放内存池信息结构体
     pool_cur = NULL;
+
+    free(pool); // 释放内存池
 
     return 0;
 }

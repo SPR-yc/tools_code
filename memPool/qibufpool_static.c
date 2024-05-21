@@ -22,6 +22,11 @@ sta_pool_info_st *g_sta_pool_info_p = NULL;
 
 static sta_pool_info_st *findStaPool(QI_VOID *pool)
 {
+    if(pool == NULL || g_sta_pool_info_p == NULL)
+    {
+        return NULL;
+    }
+
     sta_pool_info_st *pool_cur = g_sta_pool_info_p;
     while(pool_cur != NULL)
     {
@@ -34,16 +39,28 @@ static sta_pool_info_st *findStaPool(QI_VOID *pool)
 
     if(pool_cur == NULL)
     {
-        printf("%s, not find matched pool!\n", __FUNCTION__);
+        printf("%s, not find matched pool [%p]!\n", __FUNCTION__, pool);
         return NULL;
     }
 
     return pool_cur;
 }
 
-QI_S32 QIStaMemPoolInit(QI_VOID *pool, QI_U32 poolSize, QI_U32 blkSize)
+QI_S32 QIStaMemPoolInit(QI_VOID **pool, QI_U32 poolSize, QI_U32 blkSize)
 {
     QI_S32 ret = -1;
+    if(pool == NULL || poolSize == 0 || blkSize == 0)
+    {
+        printf("%s: para invalid!\n", __FUNCTION__);
+        return -1;
+    }
+
+    *pool = (QI_VOID *)malloc(poolSize);
+    if(*pool == NULL)
+    {
+        printf("%s: malloc pool failed!\n", __FUNCTION__);
+        return -1;
+    }
 
     //申请内存池信息结构体 并初始化
     sta_pool_info_st *tmp_pool_ptr = NULL;
@@ -51,10 +68,10 @@ QI_S32 QIStaMemPoolInit(QI_VOID *pool, QI_U32 poolSize, QI_U32 blkSize)
     if(tmp_pool_ptr == NULL)
     {
         printf("%s  line:%d  malloc failed!\n", __FUNCTION__, __LINE__);
-        return -1;
+        goto err1;
     }
     memset(tmp_pool_ptr, 0, sizeof(sta_pool_info_st));
-    tmp_pool_ptr->pool = pool;
+    tmp_pool_ptr->pool = *pool;
     tmp_pool_ptr->poolSize = poolSize;
     tmp_pool_ptr->blkSize = blkSize;
     tmp_pool_ptr->blkNum = poolSize / blkSize;
@@ -71,7 +88,7 @@ QI_S32 QIStaMemPoolInit(QI_VOID *pool, QI_U32 poolSize, QI_U32 blkSize)
     }
 
     int i = 0;
-    QI_VOID *tmp_ptr = pool;
+    QI_VOID *tmp_ptr = *pool;
     for(i = 0; i < tmp_pool_ptr->blkNum; i++) //循环初始化本内存池各blk信息
     {
         tmp_ptr += i * blkSize;
@@ -97,6 +114,8 @@ QI_S32 QIStaMemPoolInit(QI_VOID *pool, QI_U32 poolSize, QI_U32 blkSize)
 err:
     pthread_mutex_destroy(&tmp_pool_ptr->pool_mutex);
     free(tmp_pool_ptr);
+err1:
+    free(*pool);
 
     return -1;
 }
@@ -139,6 +158,8 @@ QI_S32 QIStaMemPoolDeInit(QI_VOID *pool)
     pool_pre->next = pool_cur->next; //将本内存池从链表删除
     free(pool_cur);  //释放内存池信息结构体
     pool_cur = NULL;
+
+    free(pool);  //释放内存池
 
     return 0;
 }
@@ -198,7 +219,7 @@ QI_S32 QIStaMemClr(QI_VOID *pool, QI_VOID *addrPtr)
 
     pthread_mutex_lock(&pool_cur->pool_mutex);
     int i = 0;
-    for(i; i < pool_cur->blkNum; i++)
+    for(i = 0; i < pool_cur->blkNum; i++)
     {
         if(pool_cur->blkArr[i].addr == addrPtr)  //验证目标地址在指定pool中
         {
@@ -208,7 +229,7 @@ QI_S32 QIStaMemClr(QI_VOID *pool, QI_VOID *addrPtr)
         }
     }
 
-    if(i == pool_cur->blkNum - 1)
+    if(i == pool_cur->blkNum)
     {
         printf("clear addr[%p] is not in pool[%p]!\n", addrPtr, pool);
         pthread_mutex_unlock(&pool_cur->pool_mutex);

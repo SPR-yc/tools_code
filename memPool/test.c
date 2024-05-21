@@ -13,13 +13,15 @@ int main(int argc, char* argv[])
 
     QI_U32 blkSize = 10;
     QI_U32 blkNum = 100;
-    int static_pool[blkNum * blkSize];
-    ret = QIStaMemPoolInit((QI_VOID *)static_pool, blkNum * blkSize, blkSize);
+    //int static_pool[blkNum * blkSize];
+    QI_VOID *static_pool = NULL;
+    ret = QIStaMemPoolInit((QI_VOID **)&static_pool, blkNum * blkSize, blkSize);
     if(ret < 0)
     {
         printf("test: init static pool failed!\n");
         return -1;
     }
+
     QIStaMemGetInfo((QI_VOID *)static_pool);
 
     int * alloc_test = (int *)QIStaMemAlloc((QI_VOID *)static_pool);
@@ -66,15 +68,16 @@ int main(int argc, char* argv[])
 
     QI_U32 blkSize = 10;
     QI_U32 blkNum = 100;
-    int dyn_pool[blkNum * blkSize];
-    ret = QIMemPoolInit((QI_VOID *)dyn_pool, blkNum * blkSize, blkSize);
+    //int dyn_pool[blkNum * blkSize];
+    QI_VOID *dyn_pool = NULL;
+    ret = QIMemPoolInit((QI_VOID **)&dyn_pool, blkNum * blkSize, blkSize);
     if(ret < 0)
     {
         printf("test: init dyn pool failed!\n");
         return -1;
     }
 
-    int *dyn_ptr = (int *)QIMemPoolAlloc((QI_VOID *)dyn_pool, 1001);
+    int *dyn_ptr = (int *)QIMemPoolAlloc((QI_VOID *)dyn_pool, 999);
     if(dyn_ptr == NULL)
     {
         printf("dyn pool test: malloc failed!\n");
@@ -86,7 +89,7 @@ int main(int argc, char* argv[])
     *dyn_ptr = 2048;
     printf("test: dyn_ptr = %d\n", *dyn_ptr);
 
-    ret = QIMemPoolClr((QI_VOID *)dyn_pool, (QI_VOID *)dyn_ptr, 1001);
+    ret = QIMemPoolClr((QI_VOID *)dyn_pool, (QI_VOID *)dyn_ptr, 999);
     if(ret < 0)
     {
         printf("test: mem clear failed!\n");

@@ -22,11 +22,11 @@
 
 /*
 * 初始化内存池，并将内存池按指定的粒度(blkSize)分割成大小相同的块
-* 参数 pool：内存池起始地址   poolSize:内存池大小(byte)    blkSize：内存池块大小(byte)
+* 参数 pool：保存内存池起始地址的指针   poolSize:内存池大小(byte)    blkSize：内存池块大小(byte)
 * 返回值  成功 0     失败 -1
 * 注： 第三个参数blkSize是用来将内存池分成大小相同的块，由用户自定义的块大小。
 */
-QI_S32 QIMemPoolInit(QI_VOID *pool, QI_U32 poolSize, QI_U32 blkSize);
+QI_S32 QIMemPoolInit(QI_VOID **pool, QI_U32 poolSize, QI_U32 blkSize);
 
 //销毁指定内存池
 QI_S32 QIMemPoolDeInit(QI_VOID *pool);
