@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <pthread.h>
+#include<string.h>
 
 
 typedef struct list_node{
@@ -24,7 +25,7 @@ typedef struct list_info
 }list_info_st;
 
 
-int spr_list_init(list_info_st* list);
+int spr_list_init(list_info_st** list);
 int spr_list_deinit(list_info_st* list);
 
 //注意：添加进链表传进来的data是用户自己malloc的地址，需要用户pop链表处理完数据之后自行 free

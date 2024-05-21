@@ -1,19 +1,26 @@
 #include "list.h"
 
 
-int spr_list_init(list_info_st* list)
+int spr_list_init(list_info_st** list)
 {
     int ret = 0;
     if(list == NULL)
     {
         return -1;
     }
+    *list = (list_info_st *)malloc(sizeof(list_info_st));
+    if(*list == NULL)
+    {
+        printf("%s: malloc list failed!\n", __FUNCTION__);
+        return -1;
+    }
+    memset(*list, 0, sizeof(list_info_st));
 
-    list->list_head = NULL;
-    list->list_tail = NULL;
-    list->next = NULL;
-    list->node_count = 0;
-    pthread_mutex_init(&list->list_mutex, NULL);
+    (*list)->list_head = NULL;
+    (*list)->list_tail = NULL;
+    (*list)->next = NULL;
+    (*list)->node_count = 0;
+    pthread_mutex_init(&(*list)->list_mutex, NULL);
 
 
     return ret;

@@ -241,7 +241,7 @@ QI_S32 QIStaMemClr(QI_VOID *pool, QI_VOID *addrPtr)
 //静态内存池，每次注销一个块的空间
 QI_S32 QIStaMemFree(QI_VOID *pool, QI_VOID *addrPtr)
 {
-    if(pool == NULL || addrPtr == NULL)
+    if(pool == NULL || addrPtr == NULL || g_sta_pool_info_p == NULL)
     {
         printf("%s line:%d   err!\n", __FUNCTION__, __LINE__);
         return -1;
